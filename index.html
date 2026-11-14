@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Editable BARZA TRADING CO. quotation template with automatic pricing totals." />
+    <title>Barza Quotation Builder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header no-print">
+      <div class="app-title">
+        <div class="app-mark" aria-hidden="true">B</div>
+        <div>
+          <h1>Quotation Builder</h1>
+          <p>BARZA TRADING CO.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="save-status" id="saveStatus" aria-live="polite">Draft ready</span>
+        <button class="button button-quiet" id="resetButton" type="button">Reset</button>
+        <button class="button button-secondary" id="saveButton" type="button">Save draft</button>
+        <button class="button button-primary" id="printButton" type="button">Print / Save PDF</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="editor no-print" aria-label="Quotation editor">
+        <section class="editor-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Details</span>
+              <h2>Quotation information</h2>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Quotation number</span>
+              <input id="quoteNumber" type="text" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Date</span>
+              <input id="quoteDate" type="date" />
+            </label>
+            <label class="field field-wide">
+              <span>Customer</span>
+              <input id="customer" type="text" autocomplete="off" />
+            </label>
+            <label class="field field-wide">
+              <span>Price note</span>
+              <input id="priceNote" type="text" autocomplete="off" />
+            </label>
+          </div>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Tax-inclusive prices</strong>
+              <small>Shows the tax declaration on the quotation.</small>
+            </span>
+            <input id="taxInclusive" type="checkbox" />
+          </label>
+        </section>
+
+        <section class="editor-section item-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Pricing</span>
+              <h2>Items</h2>
+            </div>
+            <button class="button button-add" id="addItemButton" type="button">+ Add item</button>
+          </div>
+
+          <div class="item-labels" aria-hidden="true">
+            <span>Item description</span>
+            <span>Qty</span>
+            <span>MRP</span>
+            <span>Sale price</span>
+            <span></span>
+          </div>
+          <div id="itemEditor" class="item-editor"></div>
+        </section>
+
+        <section class="editor-section editor-summary" aria-label="Current totals">
+          <div><span>Total MRP</span><strong id="editorMrp">₹0</strong></div>
+          <div><span>Total sale</span><strong id="editorSale">₹0</strong></div>
+          <div><span>Customer saves</span><strong id="editorSavings">₹0</strong></div>
+        </section>
+      </aside>
+
+      <section class="preview-shell" aria-label="Quotation preview">
+        <div class="preview-toolbar no-print">
+          <span>Live A4 preview</span>
+          <span id="itemCountLabel">5 items</span>
+        </div>
+
+        <article class="quotation-paper" id="quotationPaper">
+          <div class="paper-accent"></div>
+
+          <div class="quotation-content">
+            <header class="quotation-header">
+              <div class="seller-block">
+                <h2>BARZA TRADING CO.</h2>
+                <p>Vayassanpadi, Kuruka (PO), Malappuram Dist., Kerala - 676551</p>
+                <p>Call: +91 92070 64444 &nbsp; | &nbsp; Email: barzatrading@gmail.com</p>
+                <p>GSTIN/UIN: 32BWRPM3727L1Z2 &nbsp; | &nbsp; State: Kerala (Code 32)</p>
+              </div>
+              <div class="quotation-title">
+                <h2>QUOTATION</h2>
+                <p>Special customer pricing proposal</p>
+              </div>
+            </header>
+
+            <section class="quote-meta">
+              <div class="customer-block">
+                <span>PREPARED FOR</span>
+                <strong id="previewCustomer">Customer - Bangalore</strong>
+                <p id="previewPriceNote">Customer-specific sale prices shown below</p>
+              </div>
+              <div class="meta-block">
+                <div><span>QUOTATION NO.</span><strong id="previewNumber">QT-125</strong></div>
+                <div><span>TOTAL QUANTITY</span><strong id="previewQty">5 Pcs</strong></div>
+                <div><span>QUOTATION DATE</span><strong id="previewDate">14 Nov 2026</strong></div>
+                <div><span>PRICE BASIS</span><strong>Per Piece</strong></div>
+              </div>
+            </section>
+
+            <section class="quotation-table-wrap">
+              <table class="quotation-table">
+                <colgroup>
+                  <col class="col-number" />
+                  <col class="col-description" />
+                  <col class="col-qty" />
+                  <col class="col-money" />
+                  <col class="col-sale" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Product Description and Size</th>
+                    <th>Qty</th>
+                    <th>MRP</th>
+                    <th>Sale Price</th>
+                  </tr>
+                </thead>
+                <tbody id="previewItems"></tbody>
+                <tfoot>
+                  <tr>
+                    <td></td>
+                    <td class="total-label">TOTAL</td>
+                    <td id="tableTotalQty">5 Pcs</td>
+                    <td id="tableTotalMrp">INR 34,293</td>
+                    <td id="tableTotalSale">INR 16,146</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </section>
+
+            <section class="total-band">
+              <div><span>TOTAL MRP</span><strong id="summaryMrp">INR 34,293</strong></div>
+              <div><span>CUSTOMER SAVING</span><strong id="summarySavings">INR 18,147</strong></div>
+              <div><span id="quotedTotalLabel">TAX-INCLUSIVE TOTAL</span><strong class="highlight" id="summarySale">INR 16,146</strong></div>
+            </section>
+
+            <section class="quotation-notes">
+              <p><strong>Amount in words</strong><span id="amountWords">Rupees Sixteen Thousand One Hundred Forty-Six Only</span></p>
+              <p id="taxDeclarationRow"><strong>Tax declaration</strong><span>The sale prices and quoted total include all applicable taxes.</span></p>
+              <p><strong>Commercial terms</strong><span>Availability, delivery and payment terms will be confirmed with the final order.</span></p>
+              <p class="small-note"><span id="discountText">Overall saving against MRP: 52.92%</span><span class="separator">|</span><span>This quotation is not a tax invoice.</span></p>
+            </section>
+
+            <section class="signature-block">
+              <div class="signature-line"></div>
+              <strong>For BARZA TRADING CO.</strong>
+              <span>Authorized Signatory</span>
+            </section>
+
+            <footer class="quotation-footer">
+              <span><span id="footerNumber">Quotation QT-125</span> &nbsp; | &nbsp; <span id="footerDate">Issued 14 Nov 2026</span></span>
+              <span>BARZA TRADING CO. &nbsp; | &nbsp; Computer generated document</span>
+            </footer>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <template id="itemRowTemplate">
+      <div class="item-row">
+        <label class="sr-only">Item description</label>
+        <input class="item-name" type="text" autocomplete="off" />
+        <label class="sr-only">Quantity</label>
+        <input class="item-qty" type="number" min="0" step="1" inputmode="numeric" />
+        <label class="sr-only">MRP</label>
+        <input class="item-mrp" type="number" min="0" step="0.01" inputmode="decimal" />
+        <label class="sr-only">Sale price</label>
+        <input class="item-price" type="number" min="0" step="0.01" inputmode="decimal" />
+        <button class="remove-item" type="button" title="Remove item" aria-label="Remove item">×</button>
+      </div>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
