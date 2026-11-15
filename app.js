@@ -24,6 +24,7 @@ const defaultState = {
 
 let state = loadState();
 let saveTimer;
+let previewFullSize = false;
 
 const elements = {
   quoteNumber: document.querySelector("#quoteNumber"),
@@ -36,6 +37,10 @@ const elements = {
   previewItems: document.querySelector("#previewItems"),
   saveStatus: document.querySelector("#saveStatus"),
   mobileViewButtons: document.querySelectorAll(".mobile-view-switch [data-mobile-view]"),
+  previewShell: document.querySelector("#quotationPreview"),
+  previewStage: document.querySelector("#previewStage"),
+  quotationPaper: document.querySelector("#quotationPaper"),
+  previewZoomButton: document.querySelector("#previewZoomButton"),
 };
 
 function cloneDefaultState() {
@@ -206,6 +211,7 @@ function renderPreview() {
   setText("#editorSavings", formatInr(savings, true));
 
   document.querySelector("#taxDeclarationRow").hidden = !state.taxInclusive;
+  requestAnimationFrame(fitPreview);
 }
 
 function renderAll() {
@@ -241,11 +247,43 @@ function setMobileView(view) {
     button.setAttribute("aria-pressed", String(button.dataset.mobileView === view));
   });
   window.scrollTo({ top: 0 });
+  requestAnimationFrame(fitPreview);
+}
+
+function fitPreview() {
+  const isMobile = window.matchMedia("(max-width: 720px)").matches;
+  if (!isMobile) {
+    elements.previewStage.style.removeProperty("width");
+    elements.previewStage.style.removeProperty("height");
+    elements.quotationPaper.style.removeProperty("transform");
+    elements.previewShell.classList.remove("is-full-size");
+    return;
+  }
+
+  if (getComputedStyle(elements.previewShell).display === "none") return;
+  const shellStyle = getComputedStyle(elements.previewShell);
+  const availableWidth = elements.previewShell.clientWidth - parseFloat(shellStyle.paddingLeft) - parseFloat(shellStyle.paddingRight);
+  const paperWidth = elements.quotationPaper.offsetWidth;
+  const scale = previewFullSize ? 1 : Math.min(1, availableWidth / paperWidth);
+
+  elements.quotationPaper.style.transform = `scale(${scale})`;
+  elements.previewStage.style.width = `${paperWidth * scale}px`;
+  elements.previewStage.style.height = `${elements.quotationPaper.offsetHeight * scale}px`;
+  elements.previewShell.classList.toggle("is-full-size", previewFullSize);
+  elements.previewZoomButton.textContent = previewFullSize ? "Fit screen" : "Full size";
+  elements.previewZoomButton.setAttribute("aria-pressed", String(previewFullSize));
 }
 
 elements.mobileViewButtons.forEach((button) => {
   button.addEventListener("click", () => setMobileView(button.dataset.mobileView));
 });
+
+elements.previewZoomButton.addEventListener("click", () => {
+  previewFullSize = !previewFullSize;
+  fitPreview();
+});
+
+window.addEventListener("resize", fitPreview);
 
 document.querySelector("#addItemButton").addEventListener("click", () => {
   state.items.push({ id: makeId(), name: "New item", qty: 1, mrp: 0, price: 0 });
