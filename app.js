@@ -35,6 +35,7 @@ const elements = {
   itemTemplate: document.querySelector("#itemRowTemplate"),
   previewItems: document.querySelector("#previewItems"),
   saveStatus: document.querySelector("#saveStatus"),
+  mobileViewButtons: document.querySelectorAll(".mobile-view-switch [data-mobile-view]"),
 };
 
 function cloneDefaultState() {
@@ -233,6 +234,18 @@ function bindDetails() {
     scheduleSave();
   });
 }
+
+function setMobileView(view) {
+  document.body.dataset.mobileView = view;
+  elements.mobileViewButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.mobileView === view));
+  });
+  window.scrollTo({ top: 0 });
+}
+
+elements.mobileViewButtons.forEach((button) => {
+  button.addEventListener("click", () => setMobileView(button.dataset.mobileView));
+});
 
 document.querySelector("#addItemButton").addEventListener("click", () => {
   state.items.push({ id: makeId(), name: "New item", qty: 1, mrp: 0, price: 0 });

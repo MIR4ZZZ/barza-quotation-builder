@@ -8,7 +8,7 @@
     <title>Barza Quotation Builder</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body data-mobile-view="edit">
     <header class="app-header no-print">
       <div class="app-title">
         <div class="app-mark" aria-hidden="true">B</div>
@@ -21,12 +21,20 @@
         <span class="save-status" id="saveStatus" aria-live="polite">Draft ready</span>
         <button class="button button-quiet" id="resetButton" type="button">Reset</button>
         <button class="button button-secondary" id="saveButton" type="button">Save draft</button>
-        <button class="button button-primary" id="printButton" type="button">Print / Save PDF</button>
+        <button class="button button-primary" id="printButton" type="button">
+          <span class="button-label-wide">Print / Save PDF</span>
+          <span class="button-label-mobile">Print / PDF</span>
+        </button>
       </div>
     </header>
 
+    <nav class="mobile-view-switch no-print" aria-label="Quotation workspace">
+      <button type="button" data-mobile-view="edit" aria-controls="quotationEditor" aria-pressed="true">Edit quotation</button>
+      <button type="button" data-mobile-view="preview" aria-controls="quotationPreview" aria-pressed="false">Preview</button>
+    </nav>
+
     <main class="workspace">
-      <aside class="editor no-print" aria-label="Quotation editor">
+      <aside class="editor no-print" id="quotationEditor" aria-label="Quotation editor">
         <section class="editor-section">
           <div class="section-heading">
             <div>
@@ -89,7 +97,7 @@
         </section>
       </aside>
 
-      <section class="preview-shell" aria-label="Quotation preview">
+      <section class="preview-shell" id="quotationPreview" aria-label="Quotation preview">
         <div class="preview-toolbar no-print">
           <span>Live A4 preview</span>
           <span id="itemCountLabel">5 items</span>
