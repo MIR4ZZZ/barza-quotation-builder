@@ -1,0 +1,7 @@
+{
+  "name": "barza-business-tools",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js tests/*.test.mjs"
+  }
+}

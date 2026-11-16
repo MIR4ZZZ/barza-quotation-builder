@@ -1,2 +1,7 @@
 .serena/
 Barza_Quotation_Builder_Editable(1).zip
+.dev.vars*
+.wrangler/
+node_modules/
+output/
+.playwright-cli/

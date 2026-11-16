@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "barza-order-api",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-11-16",
+  "observability": { "enabled": true },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://mir4zzz.github.io,http://localhost:8000,http://127.0.0.1:8000"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "barza-orders",
+      // Replace this zero UUID with the ID returned by `wrangler d1 create barza-orders`.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

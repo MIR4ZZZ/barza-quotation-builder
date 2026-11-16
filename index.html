@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#142a43" />
-    <meta name="description" content="Editable BARZA TRADING CO. quotation template with automatic pricing totals." />
-    <title>Barza Quotation Builder</title>
+    <meta name="description" content="BARZA TRADING CO. quotation and mattress order request tools." />
+    <link rel="icon" href="data:," />
+    <title>Barza Business Tools</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-mobile-view="edit">
@@ -13,11 +14,11 @@
       <div class="app-title">
         <div class="app-mark" aria-hidden="true">B</div>
         <div>
-          <h1>Quotation Builder</h1>
+          <h1 id="appTitle">Quotation Builder</h1>
           <p>BARZA TRADING CO.</p>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" id="quotationHeaderActions">
         <span class="save-status" id="saveStatus" aria-live="polite">Draft ready</span>
         <button class="button button-quiet" id="resetButton" type="button">Reset</button>
         <button class="button button-secondary" id="saveButton" type="button">Save draft</button>
@@ -28,12 +29,17 @@
       </div>
     </header>
 
-    <nav class="mobile-view-switch no-print" aria-label="Quotation workspace">
+    <nav class="tool-switch no-print" aria-label="Barza tools">
+      <button type="button" data-app-view="quotation" aria-pressed="true">Quotation</button>
+      <button type="button" data-app-view="order" aria-pressed="false">Order request</button>
+    </nav>
+
+    <nav class="mobile-view-switch no-print" id="quotationMobileSwitch" aria-label="Quotation workspace">
       <button type="button" data-mobile-view="edit" aria-controls="quotationEditor" aria-pressed="true">Edit quotation</button>
       <button type="button" data-mobile-view="preview" aria-controls="quotationPreview" aria-pressed="false">Preview</button>
     </nav>
 
-    <main class="workspace">
+    <main class="workspace" id="quotationWorkspace">
       <aside class="editor no-print" id="quotationEditor" aria-label="Quotation editor">
         <section class="editor-section">
           <div class="section-heading">
@@ -196,6 +202,109 @@
       </section>
     </main>
 
+    <main class="order-workspace no-print" id="orderWorkspace" hidden>
+      <section class="order-editor" aria-label="Order request editor">
+        <div class="order-connection" id="orderConnection">
+          <div>
+            <span class="eyebrow">Shared workspace</span>
+            <strong id="syncStatus" role="status" aria-live="polite">Saved on this device</strong>
+          </div>
+          <div class="connection-actions">
+            <label class="shared-code-field">
+              <span>Shared code</span>
+              <input id="sharedCode" type="password" autocomplete="current-password" placeholder="Enter team code" />
+            </label>
+            <button class="button button-secondary" id="connectButton" type="button">Connect</button>
+            <button class="button button-outline" id="forgetCodeButton" type="button" hidden>Forget code</button>
+          </div>
+        </div>
+
+        <div class="conflict-panel" id="conflictPanel" role="alert" hidden>
+          <div>
+            <strong>A newer shared version is available</strong>
+            <p>Your changes are still saved on this device. Choose which version should continue.</p>
+          </div>
+          <div class="conflict-actions">
+            <button class="button button-outline" id="useServerButton" type="button">Use shared version</button>
+            <button class="button button-secondary" id="keepLocalButton" type="button">Keep this device</button>
+          </div>
+        </div>
+
+        <section class="order-panel">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Message</span>
+              <h2>Order details</h2>
+            </div>
+            <strong class="piece-count" id="orderPieceCount">0 Pcs</strong>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>Greeting</span>
+              <input id="orderGreeting" type="text" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Saved order name</span>
+              <input id="orderName" type="text" autocomplete="off" placeholder="e.g. November restock" />
+            </label>
+            <label class="field field-wide">
+              <span>Request line</span>
+              <input id="orderIntro" type="text" autocomplete="off" />
+            </label>
+          </div>
+        </section>
+
+        <section class="order-panel">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">Mattresses</span>
+              <h2>Models and sizes</h2>
+            </div>
+            <button class="button button-add" id="addOrderModelButton" type="button">+ Add model</button>
+          </div>
+          <div id="orderModels" class="order-models"></div>
+          <p class="empty-state" id="orderModelsEmpty">Add a mattress model to start the request.</p>
+        </section>
+
+        <div class="order-primary-actions">
+          <button class="button button-secondary" id="saveOrderButton" type="button">Save order</button>
+          <button class="button button-primary-dark" id="copyOrderButton" type="button">Copy message</button>
+        </div>
+
+        <details class="order-panel settings-panel">
+          <summary>
+            <span><span class="eyebrow">Settings</span><strong>Saved orders</strong></span>
+            <span id="savedOrderCount">0 saved</span>
+          </summary>
+          <div id="savedOrders" class="saved-list"></div>
+          <p class="empty-state" id="savedOrdersEmpty">No saved orders yet.</p>
+        </details>
+
+        <details class="order-panel settings-panel">
+          <summary>
+            <span><span class="eyebrow">Settings</span><strong>Mattress catalog</strong></span>
+            <span id="catalogCount">13 models</span>
+          </summary>
+          <div class="catalog-actions">
+            <button class="button button-add" id="addCatalogModelButton" type="button">+ New model</button>
+          </div>
+          <div id="catalogEditor" class="catalog-editor"></div>
+        </details>
+      </section>
+
+      <section class="order-preview" aria-label="Generated order message">
+        <div class="order-preview-heading">
+          <div>
+            <span class="eyebrow">WhatsApp-ready</span>
+            <h2>Order message</h2>
+          </div>
+          <button class="button button-primary-dark" id="copyPreviewButton" type="button">Copy</button>
+        </div>
+        <textarea id="orderMessage" readonly aria-label="Generated order message"></textarea>
+        <p class="preview-help">If automatic copy is unavailable, select the text above and copy it manually.</p>
+      </section>
+    </main>
+
     <template id="itemRowTemplate">
       <div class="item-row">
         <label class="item-field item-field-name">
@@ -218,6 +327,63 @@
       </div>
     </template>
 
+    <template id="orderModelTemplate">
+      <article class="order-model-card">
+        <div class="model-card-heading">
+          <label class="field model-picker-field">
+            <span>Saved model</span>
+            <select class="model-picker"></select>
+          </label>
+          <button class="remove-item remove-order-model" type="button" title="Remove model" aria-label="Remove model">×</button>
+        </div>
+        <label class="field">
+          <span>Model name</span>
+          <input class="order-model-name" type="text" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Construction / description</span>
+          <textarea class="order-model-description" rows="3"></textarea>
+        </label>
+        <label class="field reference-price-field">
+          <span>Optional reference price</span>
+          <input class="order-model-price" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional past reference" />
+        </label>
+        <div class="size-heading">
+          <strong>Sizes</strong>
+          <button class="button button-add add-size-button" type="button">+ Add size</button>
+        </div>
+        <div class="size-rows"></div>
+      </article>
+    </template>
+
+    <template id="sizeRowTemplate">
+      <div class="size-row">
+        <label class="field"><span>Length</span><input class="size-length" type="number" min="1" step="0.5" inputmode="decimal" /></label>
+        <label class="field"><span>Width</span><input class="size-width" type="number" min="1" step="0.5" inputmode="decimal" /></label>
+        <label class="field"><span>Thickness</span><input class="size-thickness" type="number" min="1" step="0.5" inputmode="decimal" /></label>
+        <label class="field"><span>Qty</span><input class="size-qty" type="number" min="1" step="1" inputmode="numeric" /></label>
+        <label class="field"><span>Colour</span><input class="size-colour" type="text" autocomplete="off" placeholder="Optional" /></label>
+        <label class="field"><span>Note</span><input class="size-note" type="text" autocomplete="off" placeholder="Optional" /></label>
+        <button class="remove-item remove-size" type="button" title="Remove size" aria-label="Remove size">×</button>
+        <p class="size-warning" role="status"></p>
+      </div>
+    </template>
+
+    <template id="catalogRowTemplate">
+      <article class="catalog-row">
+        <div class="catalog-row-heading">
+          <strong class="catalog-row-title">Mattress model</strong>
+          <button class="remove-item remove-catalog-model" type="button" title="Delete model" aria-label="Delete model">×</button>
+        </div>
+        <label class="field"><span>Model name</span><input class="catalog-name" type="text" autocomplete="off" /></label>
+        <label class="field"><span>Construction / description</span><textarea class="catalog-description" rows="3"></textarea></label>
+        <label class="field"><span>Optional reference price</span><input class="catalog-price" type="text" autocomplete="off" /></label>
+      </article>
+    </template>
+
+    <script src="config.js"></script>
+    <script src="order-core.js"></script>
     <script src="app.js"></script>
+    <script src="order-app.js"></script>
   </body>
 </html>

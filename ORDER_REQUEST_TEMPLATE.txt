@@ -1,0 +1,15 @@
+[GREETING]
+
+Please provide for me below mattresses urgently
+([TOTAL] Pcs)
+
+[MODEL NAME]
+[CONSTRUCTION / DESCRIPTION]
+[Reference price: OPTIONAL]
+
+[LENGTH]/[WIDTH]/[THICKNESS]" - [QUANTITY] ([COLOUR OR NOTE, OPTIONAL])
+
+[REPEAT MODEL AND SIZE BLOCKS]
+
+Thanks & regards
+Barza Trading
