@@ -11,8 +11,7 @@
     {
       "binding": "DB",
       "database_name": "barza-orders",
-      // Replace this zero UUID with the ID returned by `wrangler d1 create barza-orders`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "af153ed8-665e-4669-9928-47eefef1b365",
       "migrations_dir": "migrations"
     }
   ]

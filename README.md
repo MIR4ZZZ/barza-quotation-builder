@@ -11,7 +11,7 @@ Open `index.html` locally or use the [published site](https://mir4zzz.github.io/
 
 The static site works without a backend. To make the catalog, current draft and saved orders available on multiple devices:
 
-1. Create a Cloudflare D1 database with `npx wrangler d1 create barza-orders`. Replace the zero UUID in `worker/wrangler.jsonc` with the returned ID.
+1. The production config is already bound to the Barza D1 database. For a fresh Cloudflare account, create another database with `npx wrangler d1 create barza-orders` and replace `database_id` in `worker/wrangler.jsonc` with the returned ID.
 2. Apply the schema with `npx wrangler d1 migrations apply barza-orders --remote --config worker/wrangler.jsonc`.
 3. Generate a long shared code and its hash without saving either in the repository:
 
@@ -20,7 +20,7 @@ The static site works without a backend. To make the catalog, current draft and 
    ```
 
 4. Run `npx wrangler secret put SHARED_CODE_HASH --config worker/wrangler.jsonc` and paste only the printed SHA-256 value. Keep the printed shared code for the team.
-5. Deploy with `npx wrangler deploy --config worker/wrangler.jsonc`, then put the returned Worker URL in `config.js` as `window.BARZA_ORDER_API_URL`.
+5. Deploy with `npx wrangler deploy --config worker/wrangler.jsonc`. The production Worker URL is already set in `config.js`.
 
 The shared code acts as the team password. Anyone with it can read and edit the order workspace. To rotate it, generate another code and hash, update the Worker secret, and enter the new code on each device. The **Forget code** action removes it from one browser without deleting local drafts.
 
