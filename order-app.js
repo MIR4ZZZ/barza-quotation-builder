@@ -186,6 +186,7 @@
       const price = card.querySelector(".order-model-price");
       const sizes = card.querySelector(".size-rows");
       catalogOptions(picker, model.catalogId);
+      card.querySelector(".order-model-name-field").hidden = Boolean(picker.value);
       name.value = model.name;
       description.value = model.description;
       price.value = model.referencePrice;
