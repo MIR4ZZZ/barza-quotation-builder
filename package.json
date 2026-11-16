@@ -2,6 +2,7 @@
   "name": "barza-business-tools",
   "private": true,
   "scripts": {
+    "set-pin": "node scripts/set-pin.mjs",
     "test": "node --test tests/*.test.js tests/*.test.mjs"
   }
 }

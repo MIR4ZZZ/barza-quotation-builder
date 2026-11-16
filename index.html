@@ -9,7 +9,23 @@
     <title>Barza Business Tools</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body data-mobile-view="edit">
+  <body class="is-locked" data-mobile-view="edit">
+    <section class="pin-gate" id="pinGate" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+      <div class="pin-card">
+        <div class="app-mark" aria-hidden="true">B</div>
+        <span class="eyebrow">BARZA TRADING CO.</span>
+        <h1 id="pinTitle">Enter team PIN</h1>
+        <p>Use the four-digit PIN to open quotations and shared mattress orders.</p>
+        <form id="pinForm">
+          <label class="field">
+            <span>4-digit PIN</span>
+            <input id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{4}" minlength="4" maxlength="4" required autofocus />
+          </label>
+          <button class="button button-primary-dark" id="pinSubmit" type="submit">Open workspace</button>
+          <p class="pin-error" id="pinError" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
     <header class="app-header no-print">
       <div class="app-title">
         <div class="app-mark" aria-hidden="true">B</div>
@@ -204,21 +220,6 @@
 
     <main class="order-workspace no-print" id="orderWorkspace" hidden>
       <section class="order-editor" aria-label="Order request editor">
-        <div class="order-connection" id="orderConnection">
-          <div>
-            <span class="eyebrow">Shared workspace</span>
-            <strong id="syncStatus" role="status" aria-live="polite">Saved on this device</strong>
-          </div>
-          <div class="connection-actions">
-            <label class="shared-code-field">
-              <span>Shared code</span>
-              <input id="sharedCode" type="password" autocomplete="current-password" placeholder="Enter team code" />
-            </label>
-            <button class="button button-secondary" id="connectButton" type="button">Connect</button>
-            <button class="button button-outline" id="forgetCodeButton" type="button" hidden>Forget code</button>
-          </div>
-        </div>
-
         <div class="conflict-panel" id="conflictPanel" role="alert" hidden>
           <div>
             <strong>A newer shared version is available</strong>
@@ -236,7 +237,10 @@
               <span class="eyebrow">Message</span>
               <h2>Order details</h2>
             </div>
-            <strong class="piece-count" id="orderPieceCount">0 Pcs</strong>
+            <div class="order-heading-status">
+              <span class="sync-status" id="syncStatus" role="status" aria-live="polite">Syncing…</span>
+              <strong class="piece-count" id="orderPieceCount">0 Pcs</strong>
+            </div>
           </div>
           <div class="field-grid">
             <label class="field">

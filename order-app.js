@@ -5,8 +5,9 @@
   if (!Core) return;
 
   const WORKSPACE_KEY = "barza-order-workspace-v1";
-  const CODE_KEY = "barza-order-shared-code-v1";
+  const TOKEN_KEY = "barza-order-session-v1";
   const DIRTY_KEY = "barza-order-dirty-v1";
+  localStorage.removeItem("barza-order-shared-code-v1");
   const API_URL = String(window.BARZA_ORDER_API_URL || "").replace(/\/$/, "");
   let workspace = loadWorkspace();
   let dirty = localStorage.getItem(DIRTY_KEY) === "true";
@@ -31,9 +32,11 @@
     catalogTemplate: document.querySelector("#catalogRowTemplate"),
     message: document.querySelector("#orderMessage"),
     syncStatus: document.querySelector("#syncStatus"),
-    sharedCode: document.querySelector("#sharedCode"),
-    connect: document.querySelector("#connectButton"),
-    forget: document.querySelector("#forgetCodeButton"),
+    pinGate: document.querySelector("#pinGate"),
+    pinForm: document.querySelector("#pinForm"),
+    pinInput: document.querySelector("#pinInput"),
+    pinSubmit: document.querySelector("#pinSubmit"),
+    pinError: document.querySelector("#pinError"),
     conflictPanel: document.querySelector("#conflictPanel"),
     catalogEditor: document.querySelector("#catalogEditor"),
     catalogCount: document.querySelector("#catalogCount"),
@@ -66,8 +69,24 @@
     el.syncStatus.dataset.kind = kind;
   }
 
-  function sharedCode() {
-    return localStorage.getItem(CODE_KEY) || "";
+  function sessionToken() {
+    return sessionStorage.getItem(TOKEN_KEY) || "";
+  }
+
+  function lockApp(message = "") {
+    sessionStorage.removeItem(TOKEN_KEY);
+    document.body.classList.add("is-locked");
+    el.pinGate.hidden = false;
+    el.pinInput.value = "";
+    el.pinError.textContent = message;
+    el.pinSubmit.disabled = false;
+    el.pinSubmit.textContent = "Open workspace";
+    requestAnimationFrame(() => el.pinInput.focus());
+  }
+
+  function unlockApp() {
+    document.body.classList.remove("is-locked");
+    el.pinGate.hidden = true;
   }
 
   function setView(view) {
@@ -92,7 +111,7 @@
     dirty = true;
     saveLocal();
     renderMessage();
-    if (!sharedCode()) {
+    if (!sessionToken()) {
       setStatus("Saved on this device", "local");
       return;
     }
@@ -298,14 +317,6 @@
     });
   }
 
-  function renderAuth() {
-    const connected = Boolean(sharedCode());
-    el.sharedCode.value = "";
-    el.sharedCode.placeholder = connected ? "Code saved in this browser" : "Enter team code";
-    el.connect.textContent = connected ? "Sync now" : "Connect";
-    el.forget.hidden = !connected;
-  }
-
   function renderAll() {
     el.greeting.value = workspace.draft.greeting || "";
     el.intro.value = workspace.draft.intro || "";
@@ -313,12 +324,46 @@
     renderModels();
     renderCatalog();
     renderSavedOrders();
-    renderAuth();
     el.conflictPanel.hidden = !conflict;
   }
 
   function authHeaders() {
-    return { Authorization: `Bearer ${sharedCode()}`, "Content-Type": "application/json" };
+    return { Authorization: `Bearer ${sessionToken()}`, "Content-Type": "application/json" };
+  }
+
+  async function unlockWithPin(pin) {
+    if (!API_URL) {
+      el.pinError.textContent = "The shared service is not configured.";
+      return;
+    }
+    el.pinSubmit.disabled = true;
+    el.pinSubmit.textContent = "Checking…";
+    el.pinError.textContent = "";
+    try {
+      const response = await fetch(`${API_URL}/api/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        el.pinError.textContent = "Too many attempts. Try again in 15 minutes.";
+        return;
+      }
+      if (!response.ok || !result.token) {
+        el.pinError.textContent = "That PIN is incorrect.";
+        el.pinInput.select();
+        return;
+      }
+      sessionStorage.setItem(TOKEN_KEY, result.token);
+      unlockApp();
+      await pullRemote();
+    } catch {
+      el.pinError.textContent = "Unable to connect. Check your internet and try again.";
+    } finally {
+      el.pinSubmit.disabled = false;
+      el.pinSubmit.textContent = "Open workspace";
+    }
   }
 
   async function pullRemote() {
@@ -330,7 +375,7 @@
     try {
       const response = await fetch(`${API_URL}/api/workspace`, { headers: authHeaders() });
       if (response.status === 401) {
-        setStatus("Shared code was not accepted", "error");
+        lockApp("Your session expired. Enter the PIN again.");
         return;
       }
       if (!response.ok) throw new Error("Shared workspace could not be loaded");
@@ -361,7 +406,7 @@
   }
 
   async function pushRemote() {
-    if (!sharedCode() || !API_URL || conflict) return;
+    if (!sessionToken() || !API_URL || conflict) return;
     try {
       const payload = {
         revision: Number(workspace.revision) || 0,
@@ -373,7 +418,7 @@
         body: JSON.stringify(payload),
       });
       if (response.status === 401) {
-        setStatus("Shared code was not accepted", "error");
+        lockApp("Your session expired. Enter the PIN again.");
         return;
       }
       if (response.status === 409) {
@@ -457,26 +502,18 @@
   document.querySelector("#copyOrderButton").addEventListener("click", (event) => copyMessage(event.currentTarget));
   document.querySelector("#copyPreviewButton").addEventListener("click", (event) => copyMessage(event.currentTarget));
 
-  el.connect.addEventListener("click", async () => {
-    const entered = el.sharedCode.value.trim();
-    if (entered) localStorage.setItem(CODE_KEY, entered);
-    if (!sharedCode()) {
-      setStatus("Enter the shared code first", "error");
-      el.sharedCode.focus();
+  el.pinInput.addEventListener("input", () => {
+    el.pinInput.value = el.pinInput.value.replace(/\D/g, "").slice(0, 4);
+    el.pinError.textContent = "";
+  });
+  el.pinForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!/^\d{4}$/.test(el.pinInput.value)) {
+      el.pinError.textContent = "Enter all four digits.";
+      el.pinInput.focus();
       return;
     }
-    renderAuth();
-    await pullRemote();
-  });
-  el.sharedCode.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") el.connect.click();
-  });
-  el.forget.addEventListener("click", () => {
-    localStorage.removeItem(CODE_KEY);
-    conflict = null;
-    renderAuth();
-    el.conflictPanel.hidden = true;
-    setStatus("Shared code forgotten · local data kept", "local");
+    await unlockWithPin(el.pinInput.value);
   });
   document.querySelector("#useServerButton").addEventListener("click", () => {
     if (!conflict?.workspace) return;
@@ -506,5 +543,10 @@
 
   renderAll();
   setView("quotation");
-  if (sharedCode()) pullRemote();
+  if (sessionToken()) {
+    unlockApp();
+    pullRemote();
+  } else {
+    lockApp();
+  }
 })();
