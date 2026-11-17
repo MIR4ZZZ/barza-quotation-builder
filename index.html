@@ -316,9 +316,14 @@
           <span class="item-mobile-label">Product</span>
           <select class="item-product" aria-label="Product"></select>
         </label>
+        <label class="item-field item-field-custom-name" hidden>
+          <span class="item-mobile-label">Custom item name</span>
+          <input class="item-custom-name" type="text" autocomplete="off" placeholder="Enter item name" />
+        </label>
         <label class="item-field item-field-option">
           <span class="item-mobile-label">Size &amp; type</span>
           <select class="item-option" aria-label="Size and type"></select>
+          <input class="item-custom-size" type="text" autocomplete="off" placeholder="Enter custom size or type" aria-label="Custom size or type" hidden />
         </label>
         <label class="item-field item-field-qty">
           <span class="item-mobile-label">Qty</span>
@@ -393,6 +398,7 @@
     <script src="config.js"></script>
     <script src="order-core.js"></script>
     <script src="catalog.js"></script>
+    <script src="quotation-core.js"></script>
     <script src="app.js"></script>
     <script src="order-app.js"></script>
   </body>

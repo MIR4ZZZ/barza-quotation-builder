@@ -1,5 +1,6 @@
 const STORAGE_KEY = "barza-quotation-builder-v1";
 const quotationCatalog = globalThis.QUOTATION_CATALOG || [];
+const { itemDisplayName } = globalThis.QuotationCore;
 
 const today = new Date();
 const todayIso = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
@@ -20,11 +21,13 @@ function applyCatalogOption(item, product, option) {
   item.catalogId = product.id;
   item.optionId = option.id;
   item.name = option.name;
+  item.customName = "";
+  item.customSize = "";
   item.mrp = option.mrp;
 }
 
 function makeCatalogItem(product = quotationCatalog[0], option = product?.options[0]) {
-  const item = { id: makeId(), catalogId: "", optionId: "", name: "New item", qty: 1, mrp: 0, price: 0 };
+  const item = { id: makeId(), catalogId: "", optionId: "", name: "New item", customName: "", customSize: "", qty: 1, mrp: 0, price: 0 };
   if (product && option) applyCatalogOption(item, product, option);
   return item;
 }
@@ -81,6 +84,8 @@ function loadState() {
           catalogId: product?.id || "",
           optionId: option?.id || "",
           name: option?.name || String(item.name || ""),
+          customName: option ? "" : String(item.customName || item.name || ""),
+          customSize: option ? "" : String(item.customSize || ""),
           qty: numberValue(item.qty),
           mrp: option?.mrp ?? numberValue(item.mrp),
           price: numberValue(item.price),
@@ -155,19 +160,25 @@ function renderEditor() {
     const row = elements.itemTemplate.content.firstElementChild.cloneNode(true);
     const productSelect = row.querySelector(".item-product");
     const optionSelect = row.querySelector(".item-option");
+    const customNameInput = row.querySelector(".item-custom-name");
+    const customSizeInput = row.querySelector(".item-custom-size");
     const selectedProduct = findCatalogProduct(item.catalogId);
     row.dataset.id = item.id;
 
-    if (!selectedProduct) productSelect.add(new Option("Custom / existing item", ""));
     quotationCatalog.forEach((product) => productSelect.add(new Option(product.name, product.id)));
+    productSelect.add(new Option("Custom item", ""));
     productSelect.value = selectedProduct?.id || "";
 
     if (selectedProduct) {
       selectedProduct.options.forEach((option) => optionSelect.add(new Option(`${option.size} · ${option.style} · ${option.thickness} inch`, option.id)));
       optionSelect.value = item.optionId;
     } else {
-      optionSelect.add(new Option(item.name || "Custom item", ""));
+      row.querySelector(".item-field-custom-name").hidden = false;
+      customNameInput.value = item.customName || item.name || "";
+      optionSelect.hidden = true;
       optionSelect.disabled = true;
+      customSizeInput.hidden = false;
+      customSizeInput.value = item.customSize || "";
     }
 
     row.querySelector(".item-qty").value = item.qty;
@@ -179,8 +190,12 @@ function renderEditor() {
     productSelect.addEventListener("change", () => {
       const current = state.items.find((candidate) => candidate.id === item.id);
       const product = findCatalogProduct(productSelect.value);
-      if (!current || !product) return;
-      applyCatalogOption(current, product, product.options[0]);
+      if (!current) return;
+      if (product) {
+        applyCatalogOption(current, product, product.options[0]);
+      } else {
+        Object.assign(current, { catalogId: "", optionId: "", name: "", customName: "", customSize: "", mrp: 0 });
+      }
       renderAll();
       scheduleSave();
     });
@@ -199,6 +214,8 @@ function renderEditor() {
       const target = event.target;
       const current = state.items.find((candidate) => candidate.id === item.id);
       if (!current) return;
+      if (target.classList.contains("item-custom-name")) current.customName = target.value;
+      if (target.classList.contains("item-custom-size")) current.customSize = target.value;
       if (target.classList.contains("item-qty")) current.qty = numberValue(target.value);
       if (target.classList.contains("item-mrp") && !current.catalogId) current.mrp = numberValue(target.value);
       if (target.classList.contains("item-price")) current.price = numberValue(target.value);
@@ -223,7 +240,7 @@ function renderPreviewRows() {
     const row = document.createElement("tr");
     const values = [
       String(index + 1),
-      item.name.trim() || "Untitled item",
+      itemDisplayName(item),
       formatNumber(numberValue(item.qty)),
       formatInr(numberValue(item.mrp)),
       formatInr(numberValue(item.price)),

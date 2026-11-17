@@ -743,6 +743,7 @@ button {
   grid-column: 1 / 6;
 }
 
+.item-field-custom-name,
 .item-field-option {
   grid-column: 1 / 7;
 }
