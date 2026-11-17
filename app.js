@@ -26,6 +26,10 @@ function applyCatalogOption(item, product, option) {
   item.mrp = option.mrp;
 }
 
+function applyCustomCatalogSize(item, product) {
+  Object.assign(item, { optionId: "", name: product.name, customName: "", customSize: "", mrp: 0 });
+}
+
 function makeCatalogItem(product = quotationCatalog[0], option = product?.options[0]) {
   const item = { id: makeId(), catalogId: "", optionId: "", name: "New item", customName: "", customSize: "", qty: 1, mrp: 0, price: 0 };
   if (product && option) applyCatalogOption(item, product, option);
@@ -162,6 +166,7 @@ function renderEditor() {
     const optionSelect = row.querySelector(".item-option");
     const customNameInput = row.querySelector(".item-custom-name");
     const customSizeInput = row.querySelector(".item-custom-size");
+    const customSizeButton = row.querySelector(".item-custom-size-toggle");
     const selectedProduct = findCatalogProduct(item.catalogId);
     row.dataset.id = item.id;
 
@@ -173,6 +178,8 @@ function renderEditor() {
       selectedProduct.options.forEach((option) => optionSelect.add(new Option(`${option.size} · ${option.style} · ${option.thickness} inch`, option.id)));
       optionSelect.add(new Option("Custom size / type", ""));
       optionSelect.value = item.optionId;
+      customSizeButton.hidden = false;
+      customSizeButton.textContent = item.optionId ? "+ Use custom size" : "Choose catalogue size";
       if (!item.optionId) {
         customSizeInput.hidden = false;
         customSizeInput.value = item.customSize || "";
@@ -213,8 +220,18 @@ function renderEditor() {
       if (option) {
         applyCatalogOption(current, product, option);
       } else {
-        Object.assign(current, { optionId: "", name: product.name, customName: "", customSize: "", mrp: 0 });
+        applyCustomCatalogSize(current, product);
       }
+      renderAll();
+      scheduleSave();
+    });
+
+    customSizeButton.addEventListener("click", () => {
+      const current = state.items.find((candidate) => candidate.id === item.id);
+      const product = findCatalogProduct(current?.catalogId);
+      if (!current || !product) return;
+      if (current.optionId) applyCustomCatalogSize(current, product);
+      else applyCatalogOption(current, product, product.options[0]);
       renderAll();
       scheduleSave();
     });

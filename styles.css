@@ -748,6 +748,18 @@ button {
   grid-column: 1 / 7;
 }
 
+.item-custom-size-toggle {
+  grid-column: 1 / 7;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--blue);
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .item-field-qty {
   grid-column: 1 / 3;
 }
