@@ -103,7 +103,8 @@
           </div>
 
           <div class="item-labels" aria-hidden="true">
-            <span>Item description</span>
+            <span>Product</span>
+            <span>Size &amp; type</span>
             <span>Qty</span>
             <span>MRP</span>
             <span>Sale price</span>
@@ -311,9 +312,13 @@
 
     <template id="itemRowTemplate">
       <div class="item-row">
-        <label class="item-field item-field-name">
-          <span class="item-mobile-label">Item description</span>
-          <input class="item-name" type="text" autocomplete="off" />
+        <label class="item-field item-field-product">
+          <span class="item-mobile-label">Product</span>
+          <select class="item-product" aria-label="Product"></select>
+        </label>
+        <label class="item-field item-field-option">
+          <span class="item-mobile-label">Size &amp; type</span>
+          <select class="item-option" aria-label="Size and type"></select>
         </label>
         <label class="item-field item-field-qty">
           <span class="item-mobile-label">Qty</span>
@@ -387,6 +392,7 @@
 
     <script src="config.js"></script>
     <script src="order-core.js"></script>
+    <script src="catalog.js"></script>
     <script src="app.js"></script>
     <script src="order-app.js"></script>
   </body>

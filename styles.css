@@ -334,7 +334,8 @@ button {
 .field input,
 .field select,
 .field textarea,
-.item-row input {
+.item-row input,
+.item-row select {
   width: 100%;
   color: var(--ink);
   background: white;
@@ -362,7 +363,8 @@ button {
 .field input:focus,
 .field select:focus,
 .field textarea:focus,
-.item-row input:focus {
+.item-row input:focus,
+.item-row select:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(37, 107, 143, 0.12);
 }
@@ -694,38 +696,77 @@ button {
 }
 
 .item-field {
-  display: contents;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
 }
 
 .item-mobile-label {
-  display: none;
+  display: block;
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.item-labels,
 .item-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1.8fr) 52px 76px 86px 30px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 7px;
-  align-items: center;
+  align-items: end;
 }
 
 .item-labels {
-  padding: 0 2px 7px;
-  color: var(--gray-500);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  display: none;
 }
 
 .item-row {
   margin-bottom: 8px;
+  padding: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 7px;
 }
 
-.item-row input {
-  height: 38px;
+.item-row input,
+.item-row select {
+  height: 40px;
   min-width: 0;
   padding: 0 8px;
   font-size: 12px;
+}
+
+.item-row select {
+  padding-right: 25px;
+}
+
+.item-field-product {
+  grid-column: 1 / 6;
+}
+
+.item-field-option {
+  grid-column: 1 / 7;
+}
+
+.item-field-qty {
+  grid-column: 1 / 3;
+}
+
+.item-field-mrp {
+  grid-column: 3 / 5;
+}
+
+.item-field-price {
+  grid-column: 5 / 7;
+}
+
+.item-mrp[readonly] {
+  color: var(--gray-500);
+  background: var(--gray-100);
+}
+
+.item-row > .remove-item {
+  grid-column: 6;
+  grid-row: 1;
 }
 
 .item-qty,
@@ -1267,7 +1308,8 @@ button {
   .field input,
   .field select,
   .field textarea,
-  .item-row input {
+  .item-row input,
+  .item-row select {
     height: 44px;
     font-size: 16px;
   }
@@ -1285,19 +1327,12 @@ button {
     font-weight: 700;
   }
 
-  .item-field-name {
+  .item-field-product {
     grid-column: 1 / 6;
   }
 
-  .item-field-name .item-mobile-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
+  .item-field-option {
+    grid-column: 1 / 7;
   }
 
   .item-field-qty {
@@ -1442,6 +1477,12 @@ button {
   #orderMessage {
     min-height: 460px;
     font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .field-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,4 +1,5 @@
 const STORAGE_KEY = "barza-quotation-builder-v1";
+const quotationCatalog = globalThis.QUOTATION_CATALOG || [];
 
 const today = new Date();
 const todayIso = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
@@ -7,19 +8,34 @@ function makeId() {
   return globalThis.crypto?.randomUUID?.() || `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function findCatalogProduct(productId) {
+  return quotationCatalog.find((product) => product.id === productId);
+}
+
+function findCatalogOption(product, optionId) {
+  return product?.options.find((option) => option.id === optionId);
+}
+
+function applyCatalogOption(item, product, option) {
+  item.catalogId = product.id;
+  item.optionId = option.id;
+  item.name = option.name;
+  item.mrp = option.mrp;
+}
+
+function makeCatalogItem(product = quotationCatalog[0], option = product?.options[0]) {
+  const item = { id: makeId(), catalogId: "", optionId: "", name: "New item", qty: 1, mrp: 0, price: 0 };
+  if (product && option) applyCatalogOption(item, product, option);
+  return item;
+}
+
 const defaultState = {
   quoteNumber: "QT-125",
   quoteDate: todayIso,
   customer: "Customer - Bangalore",
   priceNote: "Customer-specific sale prices shown below",
   taxInclusive: true,
-  items: [
-    { id: makeId(), name: "Goodfeel EP + Foam - 72/30/4", qty: 1, mrp: 3910, price: 955 },
-    { id: makeId(), name: "Goodfeel EP + Foam - 72/36/4", qty: 1, mrp: 4783, price: 2391 },
-    { id: makeId(), name: "Goodfeel EP + Foam - 72/48/4", qty: 1, mrp: 6242, price: 3121 },
-    { id: makeId(), name: "Goodfeel EP + Foam - 78/60/4", qty: 1, mrp: 8800, price: 4400 },
-    { id: makeId(), name: "Goodfeel EP + Foam - 78/72/4", qty: 1, mrp: 10558, price: 5279 },
-  ],
+  items: [makeCatalogItem()],
 };
 
 let state = loadState();
@@ -57,13 +73,19 @@ function loadState() {
     return {
       ...cloneDefaultState(),
       ...saved,
-      items: saved.items.map((item) => ({
-        id: item.id || makeId(),
-        name: String(item.name || ""),
-        qty: numberValue(item.qty),
-        mrp: numberValue(item.mrp),
-        price: numberValue(item.price),
-      })),
+      items: saved.items.map((item) => {
+        const product = findCatalogProduct(item.catalogId);
+        const option = findCatalogOption(product, item.optionId);
+        return {
+          id: item.id || makeId(),
+          catalogId: product?.id || "",
+          optionId: option?.id || "",
+          name: option?.name || String(item.name || ""),
+          qty: numberValue(item.qty),
+          mrp: option?.mrp ?? numberValue(item.mrp),
+          price: numberValue(item.price),
+        };
+      }),
     };
   } catch {
     return cloneDefaultState();
@@ -131,20 +153,54 @@ function renderEditor() {
   elements.itemEditor.replaceChildren();
   state.items.forEach((item) => {
     const row = elements.itemTemplate.content.firstElementChild.cloneNode(true);
+    const productSelect = row.querySelector(".item-product");
+    const optionSelect = row.querySelector(".item-option");
+    const selectedProduct = findCatalogProduct(item.catalogId);
     row.dataset.id = item.id;
-    row.querySelector(".item-name").value = item.name;
+
+    if (!selectedProduct) productSelect.add(new Option("Custom / existing item", ""));
+    quotationCatalog.forEach((product) => productSelect.add(new Option(product.name, product.id)));
+    productSelect.value = selectedProduct?.id || "";
+
+    if (selectedProduct) {
+      selectedProduct.options.forEach((option) => optionSelect.add(new Option(`${option.size} · ${option.style} · ${option.thickness} inch`, option.id)));
+      optionSelect.value = item.optionId;
+    } else {
+      optionSelect.add(new Option(item.name || "Custom item", ""));
+      optionSelect.disabled = true;
+    }
+
     row.querySelector(".item-qty").value = item.qty;
     row.querySelector(".item-mrp").value = item.mrp;
+    row.querySelector(".item-mrp").readOnly = Boolean(selectedProduct);
     row.querySelector(".item-price").value = item.price;
     row.querySelector(".remove-item").disabled = state.items.length === 1;
+
+    productSelect.addEventListener("change", () => {
+      const current = state.items.find((candidate) => candidate.id === item.id);
+      const product = findCatalogProduct(productSelect.value);
+      if (!current || !product) return;
+      applyCatalogOption(current, product, product.options[0]);
+      renderAll();
+      scheduleSave();
+    });
+
+    optionSelect.addEventListener("change", () => {
+      const current = state.items.find((candidate) => candidate.id === item.id);
+      const product = findCatalogProduct(current?.catalogId);
+      const option = findCatalogOption(product, optionSelect.value);
+      if (!current || !product || !option) return;
+      applyCatalogOption(current, product, option);
+      renderAll();
+      scheduleSave();
+    });
 
     row.addEventListener("input", (event) => {
       const target = event.target;
       const current = state.items.find((candidate) => candidate.id === item.id);
       if (!current) return;
-      if (target.classList.contains("item-name")) current.name = target.value;
       if (target.classList.contains("item-qty")) current.qty = numberValue(target.value);
-      if (target.classList.contains("item-mrp")) current.mrp = numberValue(target.value);
+      if (target.classList.contains("item-mrp") && !current.catalogId) current.mrp = numberValue(target.value);
       if (target.classList.contains("item-price")) current.price = numberValue(target.value);
       renderPreview();
       scheduleSave();
@@ -286,18 +342,16 @@ elements.previewZoomButton.addEventListener("click", () => {
 window.addEventListener("resize", fitPreview);
 
 document.querySelector("#addItemButton").addEventListener("click", () => {
-  state.items.push({ id: makeId(), name: "New item", qty: 1, mrp: 0, price: 0 });
+  state.items.push(makeCatalogItem());
   renderAll();
   scheduleSave();
-  const lastName = elements.itemEditor.lastElementChild?.querySelector(".item-name");
-  lastName?.focus();
-  lastName?.select();
+  elements.itemEditor.lastElementChild?.querySelector(".item-product")?.focus();
 });
 
 document.querySelector("#saveButton").addEventListener("click", saveDraft);
 document.querySelector("#printButton").addEventListener("click", () => window.print());
 document.querySelector("#resetButton").addEventListener("click", () => {
-  if (!window.confirm("Reset the quotation to the original Goodfeel template?")) return;
+  if (!window.confirm("Reset the quotation to the Sleepcare catalogue template?")) return;
   state = cloneDefaultState();
   localStorage.removeItem(STORAGE_KEY);
   renderAll();
