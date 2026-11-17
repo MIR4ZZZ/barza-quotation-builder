@@ -83,8 +83,8 @@ function loadState() {
           id: item.id || makeId(),
           catalogId: product?.id || "",
           optionId: option?.id || "",
-          name: option?.name || String(item.name || ""),
-          customName: option ? "" : String(item.customName || item.name || ""),
+          name: option?.name || product?.name || String(item.name || ""),
+          customName: product ? "" : String(item.customName || item.name || ""),
           customSize: option ? "" : String(item.customSize || ""),
           qty: numberValue(item.qty),
           mrp: option?.mrp ?? numberValue(item.mrp),
@@ -171,7 +171,12 @@ function renderEditor() {
 
     if (selectedProduct) {
       selectedProduct.options.forEach((option) => optionSelect.add(new Option(`${option.size} · ${option.style} · ${option.thickness} inch`, option.id)));
+      optionSelect.add(new Option("Custom size / type", ""));
       optionSelect.value = item.optionId;
+      if (!item.optionId) {
+        customSizeInput.hidden = false;
+        customSizeInput.value = item.customSize || "";
+      }
     } else {
       row.querySelector(".item-field-custom-name").hidden = false;
       customNameInput.value = item.customName || item.name || "";
@@ -183,7 +188,7 @@ function renderEditor() {
 
     row.querySelector(".item-qty").value = item.qty;
     row.querySelector(".item-mrp").value = item.mrp;
-    row.querySelector(".item-mrp").readOnly = Boolean(selectedProduct);
+    row.querySelector(".item-mrp").readOnly = Boolean(selectedProduct && item.optionId);
     row.querySelector(".item-price").value = item.price;
     row.querySelector(".remove-item").disabled = state.items.length === 1;
 
@@ -204,8 +209,12 @@ function renderEditor() {
       const current = state.items.find((candidate) => candidate.id === item.id);
       const product = findCatalogProduct(current?.catalogId);
       const option = findCatalogOption(product, optionSelect.value);
-      if (!current || !product || !option) return;
-      applyCatalogOption(current, product, option);
+      if (!current || !product) return;
+      if (option) {
+        applyCatalogOption(current, product, option);
+      } else {
+        Object.assign(current, { optionId: "", name: product.name, customName: "", customSize: "", mrp: 0 });
+      }
       renderAll();
       scheduleSave();
     });
@@ -217,7 +226,7 @@ function renderEditor() {
       if (target.classList.contains("item-custom-name")) current.customName = target.value;
       if (target.classList.contains("item-custom-size")) current.customSize = target.value;
       if (target.classList.contains("item-qty")) current.qty = numberValue(target.value);
-      if (target.classList.contains("item-mrp") && !current.catalogId) current.mrp = numberValue(target.value);
+      if (target.classList.contains("item-mrp") && !current.optionId) current.mrp = numberValue(target.value);
       if (target.classList.contains("item-price")) current.price = numberValue(target.value);
       renderPreview();
       scheduleSave();
